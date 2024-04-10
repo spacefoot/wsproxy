@@ -1,0 +1,11 @@
+changelog:
+  categories:
+    - title: ':sparkles: Features'
+      labels:
+        - '*'
+      exclude:
+        labels:
+          - dependencies
+    - title: ':arrow_up: Dependencies'
+      labels:
+        - dependencies
