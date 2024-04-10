@@ -1,0 +1,57 @@
+<div id="status"></div>
+<div>
+    <form>
+        <input type="number" name="weight" step="0.01" value="0.5">
+        <input type="text" name="unit" value="kg">
+        <button id="send">send</button>
+    </form>
+</div>
+<button id="clear">clear</button>
+<pre id="output"></pre>
+
+<script>
+const status = document.querySelector('#status');
+const output = document.querySelector('#output');
+const form = document.querySelector('form');
+
+document.querySelector('#clear').addEventListener('click', () => {
+    output.textContent = '';
+});
+
+class Scale {
+    constructor() {
+        this.connect();
+    }
+
+    connect() {
+        this.socket = new WebSocket('ws://localhost:23193/ws');
+
+        this.socket.addEventListener('open', event => {
+            console.log('Connected to scale');
+            status.textContent = '✅ Connected to proxy';
+        });
+
+        this.socket.addEventListener('close', event => {
+            console.log('Connection closed');
+            status.textContent = '❌ Connection closed';
+            setTimeout(() => this.connect(), 1000);
+        });
+
+        this.socket.addEventListener('message', event => {
+            output.textContent += event.data + '\n';
+        });
+    }
+
+    send(weight, unit = 'kg') {
+        this.socket.send(JSON.stringify({ weight, unit }));
+    }
+}
+
+const scale = new Scale();
+
+form.addEventListener('submit', event => {
+    event.preventDefault();
+    const form = new FormData(event.target);
+    scale.send(Number(form.get('weight')), form.get('unit'));
+});
+</script>

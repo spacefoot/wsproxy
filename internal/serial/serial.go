@@ -1,0 +1,125 @@
+package serial
+
+import (
+	"bufio"
+	"bytes"
+	"errors"
+	"log/slog"
+	"math"
+	"time"
+
+	"go.bug.st/serial"
+	"go.bug.st/serial/enumerator"
+)
+
+type Serial struct {
+	port   serial.Port
+	opened bool
+
+	read  chan<- []byte
+	write <-chan []byte
+}
+
+func NewSerial(read chan<- []byte, write <-chan []byte) *Serial {
+	return &Serial{
+		read:  read,
+		write: write,
+	}
+}
+
+func (s *Serial) Open() error {
+	ports, err := enumerator.GetDetailedPortsList()
+	if err != nil {
+		return err
+	}
+
+	if len(ports) == 0 {
+		return errors.New("no serial ports found")
+	}
+
+	if len(ports) > 1 {
+		return errors.New("multiple serial ports found. not supported")
+	}
+
+	mode := &serial.Mode{
+		BaudRate: 9600,
+		Parity:   serial.NoParity,
+		DataBits: 8,
+		StopBits: serial.OneStopBit,
+	}
+
+	port, err := serial.Open(ports[0].Name, mode)
+	if err != nil {
+		return err
+	}
+
+	slog.Info("serial port opened", "port", ports[0].Name)
+	s.port = port
+	s.opened = true
+	return nil
+}
+
+const (
+	// BACKOFF_MAX_DURATION is the maximum duration to wait between retries
+	BACKOFF_MAX_DURATION = 5 * time.Second
+	// BACKOFF_SCALE is the factor to increase the backoff duration each retry
+	BACKOFF_SCALE = 2
+	// BACKOFF_SCALE_COUNT is the number of retries to increase the backoff duration
+	BACKOFF_SCALE_COUNT = 5
+)
+
+func (s *Serial) OpenWithBackoff() {
+	backoff := time.Duration(float64(BACKOFF_MAX_DURATION) / math.Pow(BACKOFF_SCALE, BACKOFF_SCALE_COUNT))
+
+	for {
+		err := s.Open()
+		if err == nil {
+			return
+		}
+
+		slog.Warn("serial open error", "err", err)
+		slog.Info("retrying in", "duration", backoff)
+
+		time.Sleep(backoff)
+		if backoff < BACKOFF_MAX_DURATION {
+			backoff *= BACKOFF_SCALE
+		}
+	}
+}
+
+func (s *Serial) reader() error {
+	defer s.Close()
+
+	reader := bufio.NewReader(s.port)
+	for {
+		line, err := reader.ReadBytes('\n')
+		if err != nil {
+			return err
+		}
+		if len(line) == 0 {
+			break
+		}
+
+		line = bytes.TrimRight(line, "\r\n")
+		slog.Debug("read from serial", "data", string(line))
+		s.read <- line
+	}
+
+	return nil
+}
+
+func (s *Serial) Run() {
+	for {
+		s.OpenWithBackoff()
+
+		err := s.reader()
+		if err != nil {
+			slog.Error("serial reader error", "err", err)
+		}
+	}
+}
+
+func (s *Serial) Close() {
+	s.port.Close()
+	s.opened = false
+}
