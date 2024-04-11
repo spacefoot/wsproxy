@@ -12,18 +12,24 @@ import (
 	"go.bug.st/serial/enumerator"
 )
 
+type Status struct {
+	Open bool
+}
+
 type Serial struct {
 	port   serial.Port
 	opened bool
 
-	read  chan<- []byte
-	write <-chan []byte
+	read   chan<- []byte
+	write  <-chan []byte
+	status chan<- Status
 }
 
-func NewSerial(read chan<- []byte, write <-chan []byte) *Serial {
+func NewSerial(read chan<- []byte, write <-chan []byte, status chan<- Status) *Serial {
 	return &Serial{
-		read:  read,
-		write: write,
+		read:   read,
+		write:  write,
+		status: status,
 	}
 }
 
@@ -56,6 +62,7 @@ func (s *Serial) Open() error {
 	slog.Info("serial port opened", "port", ports[0].Name)
 	s.port = port
 	s.opened = true
+	s.RequestStatus()
 	return nil
 }
 
@@ -122,4 +129,11 @@ func (s *Serial) Run() {
 func (s *Serial) Close() {
 	s.port.Close()
 	s.opened = false
+	s.RequestStatus()
+}
+
+func (s *Serial) RequestStatus() {
+	s.status <- Status{
+		Open: s.opened,
+	}
 }

@@ -2,46 +2,56 @@ package serializer
 
 import (
 	"encoding/json"
+	"errors"
 )
 
 type Serializer interface {
-	Read(msg []byte) ([]byte, error)
+	Read(msg []byte) (any, error)
+	Write(data any) ([]byte, error)
 }
 
-type Weight struct {
-	Weight float64 `json:"weight"`
-	Unit   string  `json:"unit"`
+type TypeMeta struct {
+	Type string          `json:"type"`
+	Data json.RawMessage `json:"data"`
 }
 
-func (w Weight) ToJSON() ([]byte, error) {
-	return marshalJSON("weight", w)
-}
-
-func marshalJSON(name string, data any) ([]byte, error) {
-	return json.Marshal(struct {
-		Type string `json:"type"`
-		Data any    `json:"data"`
-	}{
-		Type: name,
-		Data: data,
-	})
+func MarshalJSON(v any) ([]byte, error) {
+	switch v := v.(type) {
+	case *Weight:
+		return marshalJSON("weight", v)
+	case *Status:
+		return marshalJSON("status", v)
+	default:
+		return nil, errors.New("invalid message")
+	}
 }
 
 func UnmarshalJSON(data []byte) (any, error) {
-	var t struct {
-		Type string `json:"$type"`
-	}
-
+	var t TypeMeta
 	if err := json.Unmarshal(data, &t); err != nil {
 		return nil, err
 	}
 
 	switch t.Type {
 	case "weight":
-		return unmarshalJSON(data, &Weight{})
+		return unmarshalJSON(t.Data, &Weight{})
+	case "status":
+		return &RequestStatus{}, nil
 	default:
-		return nil, nil
+		return nil, errors.New("invalid message")
 	}
+}
+
+func marshalJSON(name string, data any) ([]byte, error) {
+	d, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+
+	return json.Marshal(TypeMeta{
+		Type: name,
+		Data: d,
+	})
 }
 
 func unmarshalJSON(data []byte, v any) (any, error) {

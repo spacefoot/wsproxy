@@ -14,18 +14,20 @@ var upgrader = websocket.Upgrader{
 }
 
 type Hub struct {
-	read  chan<- []byte
-	write <-chan []byte
+	read       chan<- []byte
+	write      <-chan []byte
+	registered chan<- bool
 
 	peers      map[*Peer]bool
 	register   chan *Peer
 	unregister chan *Peer
 }
 
-func NewHub(read chan<- []byte, write <-chan []byte) *Hub {
+func NewHub(read chan<- []byte, write <-chan []byte, registered chan<- bool) *Hub {
 	return &Hub{
-		read:  read,
-		write: write,
+		read:       read,
+		write:      write,
+		registered: registered,
 
 		peers:      map[*Peer]bool{},
 		register:   make(chan *Peer),
@@ -51,6 +53,7 @@ func (h *Hub) Run() {
 		case peer := <-h.register:
 			h.peers[peer] = true
 			slog.Debug("peer registered", "peer", peer.conn.RemoteAddr())
+			h.registered <- true
 		case peer := <-h.unregister:
 			delete(h.peers, peer)
 			slog.Debug("peer unregistered", "peer", peer.conn.RemoteAddr())

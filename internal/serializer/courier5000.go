@@ -1,13 +1,14 @@
 package serializer
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 )
 
 type Courier5000 struct{}
 
-func (Courier5000) Read(msg []byte) ([]byte, error) {
+func (Courier5000) Read(msg []byte) (any, error) {
 	if len(msg) == 0 {
 		return nil, nil
 	}
@@ -23,8 +24,12 @@ func (Courier5000) Read(msg []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	return Weight{
+	return &Weight{
 		Weight: weight,
 		Unit:   lines[1],
-	}.ToJSON()
+	}, nil
+}
+
+func (Courier5000) Write(data any) ([]byte, error) {
+	return nil, errors.New("not implemented")
 }

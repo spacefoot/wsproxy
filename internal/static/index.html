@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>wsproxy Debug</title>
+        <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    </head>
+
+    <body x-data="scale">
+        <div>
+            <span x-text="proxyConnected ? '✅ Connected to proxy' : '❌ proxy not connected'"></span>
+            <span x-text="scaleConnected ? '✅ Connected to scale' : '❌ scale not connected'"></span>
+        </div>
+        <div>
+            <form @submit.prevent="send({ type: 'weight', data: { weight: Number(weight), unit } })">
+                <input type="number" step="0.01" x-model="weight">
+                <input type="text" x-model="unit">
+                <input type="submit" value="send">
+            </form>
+        </div>
+        <button @click="output = ''">clear</button>
+        <button @click="send({ type: 'status' })">Request Status</button>
+        <pre x-text="output"></pre>
+
+        <script>
+            document.addEventListener('alpine:init', () => {
+                Alpine.data('scale', () => ({
+                    proxyConnected: false,
+                    scaleConnected: false,
+                    output: '',
+
+                    //form
+                    weight: '0.5',
+                    unit: 'kg',
+
+                    init() {
+                        this.connect();
+                    },
+
+                    connect() {
+                        this.socket = new WebSocket('ws://localhost:23193/ws');
+
+                        this.socket.addEventListener('open', event => {
+                            console.log('Connected to scale');
+                            this.proxyConnected = true;
+                        });
+
+                        this.socket.addEventListener('close', event => {
+                            console.log('Connection closed');
+                            this.proxyConnected = this.scaleConnected = false;
+                            this.socket = null;
+                            setTimeout(() => this.connect(), 1000);
+                        });
+
+                        this.socket.addEventListener('message', event => {
+                            this.output += event.data + '\n';
+
+                            try {
+                                const msg = JSON.parse(event.data);
+                                if (msg.type === 'status') {
+                                    this.scaleConnected = msg.data.open;
+                                }
+                            } catch (e) {
+                                console.error(e);
+                            }
+                        });
+                    },
+
+                    send(msg) {
+                        this.socket?.send(JSON.stringify(msg));
+                    },
+                }));
+            });
+        </script>
+    </body>
+</html>
