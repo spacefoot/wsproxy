@@ -1,6 +1,7 @@
 package core
 
 import (
+	"html/template"
 	"log/slog"
 	"net/http"
 
@@ -11,6 +12,8 @@ import (
 )
 
 type Core struct {
+	debug bool
+
 	clientReader     chan []byte
 	clientWriter     chan []byte
 	clientRegistered chan bool
@@ -21,11 +24,12 @@ type Core struct {
 
 	serializer serializer.Serializer
 	hub        *websocket.Hub
-	serial     *serial.Serial
+	serial     serial.ISerial
 }
 
-func NewCore() *Core {
+func NewCore(debug bool) *Core {
 	c := &Core{
+		debug:            debug,
 		clientReader:     make(chan []byte),
 		clientWriter:     make(chan []byte),
 		clientRegistered: make(chan bool),
@@ -38,14 +42,20 @@ func NewCore() *Core {
 	}
 
 	c.hub = websocket.NewHub(c.clientReader, c.clientWriter, c.clientRegistered)
-	c.serial = serial.NewSerial(c.scaleReader, c.scaleWriter, c.serialStatus)
+
+	if c.debug {
+		slog.Info("running in debug mode")
+		c.serial = serial.NewMock(c.serialStatus)
+	} else {
+		c.serial = serial.NewSerial(c.scaleReader, c.scaleWriter, c.serialStatus)
+	}
 
 	return c
 }
 
 func (c *Core) Run() {
 	http.Handle("/ws", c.hub)
-	http.Handle("/", http.FileServerFS(static.FS))
+	http.HandleFunc("GET /{$}", c.serveDebugPage)
 
 	go c.run()
 	go c.hub.Run()
@@ -96,8 +106,9 @@ func (c *Core) readClient(msg []byte) {
 		// Must start another goroutine to avoid this.
 		go c.serial.RequestStatus()
 	case *serializer.Weight:
-		// TMP echo back the weight for debugging
-		go c.writeClient(data)
+		if c.debug {
+			go c.writeClient(data)
+		}
 	default:
 		slog.Warn("unknown message", "data", string(msg))
 	}
@@ -118,6 +129,17 @@ func (c *Core) writeClient(msg any) {
 	c.clientWriter <- data
 }
 
+func (c *Core) serveDebugPage(w http.ResponseWriter, r *http.Request) {
+	t := template.Must(template.New("index").Parse(static.Index))
+	if err := t.Execute(w, static.IndexData{Debug: c.debug}); err != nil {
+		slog.Error("error while rendering debug page", "err", err)
+	}
+}
+
 func Run() {
-	NewCore().Run()
+	NewCore(false).Run()
+}
+
+func RunDebug(debug bool) {
+	NewCore(debug).Run()
 }

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log/slog"
-
 	"github.com/spacefoot/wsproxy/internal/core"
 	"github.com/spf13/cobra"
 )
@@ -10,13 +8,13 @@ import (
 var serverCmd = &cobra.Command{
 	Use:   "server",
 	Short: "Start the server",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		slog.SetLogLoggerLevel(slog.LevelDebug)
-		core.Run()
-		return nil
+	Run: func(cmd *cobra.Command, args []string) {
+		debug, _ := cmd.Flags().GetBool("debug")
+		core.RunDebug(debug)
 	},
 }
 
 func init() {
+	serverCmd.Flags().Bool("debug", false, "Enable debug mode")
 	rootCmd.AddCommand(serverCmd)
 }

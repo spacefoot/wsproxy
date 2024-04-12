@@ -3,22 +3,45 @@
     <head>
         <title>wsproxy Debug</title>
         <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+        <style>
+            body {
+                font-family: sans-serif;
+                margin: 1em;
+            }
+
+            body > div {
+                margin: 0.5em 0;
+            }
+
+            pre {
+                height: 80vh;
+                overflow-y: auto;
+                white-space: pre-wrap;
+            }
+        </style>
     </head>
 
     <body x-data="scale">
         <div>
-            <span x-text="proxyConnected ? '✅ Connected to proxy' : '❌ proxy not connected'"></span>
-            <span x-text="scaleConnected ? '✅ Connected to scale' : '❌ scale not connected'"></span>
+{{- if .Debug }}
+            <div>🚧 Debug Mode</div>
+{{- end }}
+            <div x-text="proxyConnected ? '✅ Connected to proxy' : '❌ proxy not connected'"></div>
+            <div x-text="scaleConnected ? '✅ Connected to scale' : '❌ scale not connected'"></div>
         </div>
+{{- if .Debug }}
         <div>
-            <form @submit.prevent="send({ type: 'weight', data: { weight: Number(weight), unit } })">
+            <form x-data="{weight: '0.5', unit: 'kg'}" @submit.prevent="send({ type: 'weight', data: { weight: Number(weight), unit } })">
                 <input type="number" step="0.01" x-model="weight">
                 <input type="text" x-model="unit">
-                <input type="submit" value="send">
+                <input type="submit" value="Send">
             </form>
         </div>
-        <button @click="output = ''">clear</button>
-        <button @click="send({ type: 'status' })">Request Status</button>
+{{- end }}
+        <div>
+            <button @click="output = ''">Clear</button>
+            <button @click="send({ type: 'status' })">Request Status</button>
+        </div>
         <pre x-text="output"></pre>
 
         <script>
@@ -28,10 +51,6 @@
                     scaleConnected: false,
                     output: '',
 
-                    //form
-                    weight: '0.5',
-                    unit: 'kg',
-
                     init() {
                         this.connect();
                     },
@@ -40,22 +59,19 @@
                         this.socket = new WebSocket('ws://localhost:23193/ws');
 
                         this.socket.addEventListener('open', event => {
-                            console.log('Connected to scale');
                             this.proxyConnected = true;
                         });
 
                         this.socket.addEventListener('close', event => {
-                            console.log('Connection closed');
                             this.proxyConnected = this.scaleConnected = false;
                             this.socket = null;
                             setTimeout(() => this.connect(), 1000);
                         });
 
                         this.socket.addEventListener('message', event => {
-                            this.output += event.data + '\n';
-
                             try {
                                 const msg = JSON.parse(event.data);
+                                this.output += `${new Date().toISOString()} ${JSON.stringify(msg)}\n`;
                                 if (msg.type === 'status') {
                                     this.scaleConnected = msg.data.open;
                                 }

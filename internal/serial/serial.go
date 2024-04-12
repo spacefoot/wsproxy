@@ -12,6 +12,11 @@ import (
 	"go.bug.st/serial/enumerator"
 )
 
+type ISerial interface {
+	Run()
+	RequestStatus()
+}
+
 type Status struct {
 	Open bool
 }

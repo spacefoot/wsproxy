@@ -1,6 +1,10 @@
 package static
 
-import "embed"
+import _ "embed"
 
-//go:embed *.html
-var FS embed.FS
+//go:embed index.html
+var Index string
+
+type IndexData struct {
+	Debug bool
+}

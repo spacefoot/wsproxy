@@ -13,17 +13,21 @@ const versionTemplate = `
 Tag:        {{ .Tag }}
 {{- if .Commit }}
 Commit:     {{ .Commit }}
+{{- if .DirtyWorktree }}
+            Dirty Worktree
+{{- end }}
 {{- end }}
 Go version: {{ .GoVersion }}
 OS/Arch:    {{ .Os }}/{{ .Arch }}
 `
 
 type Version struct {
-	Tag       string `json:"tag,omitempty"`
-	Commit    string `json:"commit,omitempty"`
-	GoVersion string `json:"goVersion,omitempty"`
-	Os        string `json:"os,omitempty"`
-	Arch      string `json:"arch,omitempty"`
+	Tag           string `json:"tag,omitempty"`
+	Commit        string `json:"commit,omitempty"`
+	DirtyWorktree bool   `json:"dirtyWorktree,omitempty"`
+	GoVersion     string `json:"goVersion,omitempty"`
+	Os            string `json:"os,omitempty"`
+	Arch          string `json:"arch,omitempty"`
 }
 
 func GetVersion() Version {
@@ -41,9 +45,7 @@ func GetVersion() Version {
 			case "vcs.revision":
 				v.Commit = setting.Value
 			case "vcs.modified":
-				if setting.Value == "true" && VERSION != "dev" {
-					v.Tag += "-dirty"
-				}
+				v.DirtyWorktree = true
 			}
 		}
 	}
