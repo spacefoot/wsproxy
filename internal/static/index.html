@@ -27,7 +27,7 @@
             <div>🚧 Debug Mode</div>
 {{- end }}
             <div x-text="proxyConnected ? '✅ Connected to proxy' : '❌ proxy not connected'"></div>
-            <div x-text="scaleConnected ? '✅ Connected to scale' : '❌ scale not connected'"></div>
+            <div x-text="scaleConnected ? '{{ if .SimulateSerial }}🚧 Serial Simulated{{ else }}✅ Connected to scale{{ end }}' : '❌ scale not connected'"></div>
         </div>
 {{- if .Debug }}
         <div>

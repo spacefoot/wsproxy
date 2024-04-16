@@ -6,5 +6,6 @@ import _ "embed"
 var Index string
 
 type IndexData struct {
-	Debug bool
+	Debug          bool
+	SimulateSerial bool
 }

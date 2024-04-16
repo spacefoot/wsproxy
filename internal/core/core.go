@@ -12,7 +12,8 @@ import (
 )
 
 type Core struct {
-	debug bool
+	debug          bool
+	simulateSerial bool
 
 	clientReader     chan []byte
 	clientWriter     chan []byte
@@ -27,9 +28,16 @@ type Core struct {
 	serial     serial.ISerial
 }
 
-func NewCore(debug bool) *Core {
+type CoreParams struct {
+	Debug          bool
+	SimulateSerial bool
+}
+
+func NewCore(params CoreParams) *Core {
 	c := &Core{
-		debug:            debug,
+		debug:          params.Debug,
+		simulateSerial: params.SimulateSerial,
+
 		clientReader:     make(chan []byte),
 		clientWriter:     make(chan []byte),
 		clientRegistered: make(chan bool),
@@ -43,8 +51,8 @@ func NewCore(debug bool) *Core {
 
 	c.hub = websocket.NewHub(c.clientReader, c.clientWriter, c.clientRegistered)
 
-	if c.debug {
-		slog.Info("running in debug mode")
+	if c.simulateSerial {
+		slog.Info("running serial in simulation mode")
 		c.serial = serial.NewMock(c.serialStatus)
 	} else {
 		c.serial = serial.NewSerial(c.scaleReader, c.scaleWriter, c.serialStatus)
@@ -131,15 +139,14 @@ func (c *Core) writeClient(msg any) {
 
 func (c *Core) serveDebugPage(w http.ResponseWriter, r *http.Request) {
 	t := template.Must(template.New("index").Parse(static.Index))
-	if err := t.Execute(w, static.IndexData{Debug: c.debug}); err != nil {
+	if err := t.Execute(w, static.IndexData{
+		Debug:          c.debug,
+		SimulateSerial: c.simulateSerial,
+	}); err != nil {
 		slog.Error("error while rendering debug page", "err", err)
 	}
 }
 
 func Run() {
-	NewCore(false).Run()
-}
-
-func RunDebug(debug bool) {
-	NewCore(debug).Run()
+	NewCore(CoreParams{}).Run()
 }
