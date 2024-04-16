@@ -29,13 +29,13 @@ jobs:
         run: go test ./...
 
       - name: Build artifacts linux/amd64
-        run: GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -X 'github.com/spacefoot/wsproxy/internal/core.VERSION=${GITHUB_REF##*/}'" -o wsproxy-linux-amd64 ./cmd
+        run: GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -X 'github.com/spacefoot/wsproxy/internal/core.VERSION=${{ github.ref_name }}'" -o wsproxy-linux-amd64 ./cmd
       - name: Build artifacts linux/arm64
-        run: GOOS=linux GOARCH=arm64 go build -trimpath -ldflags="-s -X 'github.com/spacefoot/wsproxy/internal/core.VERSION=${GITHUB_REF##*/}'" -o wsproxy-linux-arm64 ./cmd
+        run: GOOS=linux GOARCH=arm64 go build -trimpath -ldflags="-s -X 'github.com/spacefoot/wsproxy/internal/core.VERSION=${{ github.ref_name }}'" -o wsproxy-linux-arm64 ./cmd
       - name: Build artifacts windows/amd64
-        run: GOOS=windows GOARCH=amd64 go build -trimpath -ldflags="-s -X 'github.com/spacefoot/wsproxy/internal/core.VERSION=${GITHUB_REF##*/}'" -o wsproxy-windows-amd64 ./cmd
+        run: GOOS=windows GOARCH=amd64 go build -trimpath -ldflags="-s -X 'github.com/spacefoot/wsproxy/internal/core.VERSION=${{ github.ref_name }}'" -o wsproxy-windows-amd64 ./cmd
       - name: Build artifacts windows/arm64
-        run: GOOS=windows GOARCH=arm64 go build -trimpath -ldflags="-s -X 'github.com/spacefoot/wsproxy/internal/core.VERSION=${GITHUB_REF##*/}'" -o wsproxy-windows-arm64 ./cmd
+        run: GOOS=windows GOARCH=arm64 go build -trimpath -ldflags="-s -X 'github.com/spacefoot/wsproxy/internal/core.VERSION=${{ github.ref_name }}'" -o wsproxy-windows-arm64 ./cmd
 
       - name: Release and publish artifacts
         uses: ncipollo/release-action@v1
@@ -48,6 +48,6 @@ jobs:
         uses: ko-build/setup-ko@v0.6
 
       - name: Build and push container
-        run: ko build --bare --image-label="org.opencontainers.image.source=https://github.com/${{ github.repository }}" --platform=linux/amd64,linux/arm64 --tags="latest,${GITHUB_REF##*/}" ./cmd
+        run: ko build --bare --image-label="org.opencontainers.image.source=https://github.com/${{ github.repository }}" --platform=linux/amd64,linux/arm64 --tags="latest,${{ github.ref_name }}" ./cmd
         env:
-          GOFLAGS: "\"-ldflags=-s -X 'github.com/spacefoot/wsproxy/internal/core.VERSION=${GITHUB_REF##*/}' -X 'github.com/spacefoot/wsproxy/internal/core.DefaultAddr=:23193'\""
+          GOFLAGS: "\"-ldflags=-s -X 'github.com/spacefoot/wsproxy/internal/core.VERSION=${{ github.ref_name }}' -X 'github.com/spacefoot/wsproxy/internal/core.DefaultAddr=:23193'\""
