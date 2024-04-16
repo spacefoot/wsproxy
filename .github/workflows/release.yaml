@@ -43,3 +43,11 @@ jobs:
           artifacts: "wsproxy-*-*"
           generateReleaseNotes: "true"
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup ko
+        uses: ko-build/setup-ko@v0.6
+
+      - name: Build and push container
+        run: ko build --bare --image-label="org.opencontainers.image.source=https://github.com/${{ github.repository }}" --platform=linux/amd64,linux/arm64 --tags="latest,${GITHUB_REF##*/}" ./cmd
+        env:
+          GOFLAGS: "\"-ldflags=-s -X 'github.com/spacefoot/wsproxy/internal/core.VERSION=${GITHUB_REF##*/}'\""
