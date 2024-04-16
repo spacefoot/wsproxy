@@ -11,7 +11,12 @@ import (
 	"github.com/spacefoot/wsproxy/internal/websocket"
 )
 
+// DefaultAddr is the default address to listen on.
+// Set as variable to be overridable at build time for container release.
+var DefaultAddr = "localhost:23193"
+
 type Core struct {
+	addr           string
 	debug          bool
 	simulateSerial bool
 
@@ -29,14 +34,20 @@ type Core struct {
 }
 
 type CoreParams struct {
+	Addr           string
 	Debug          bool
 	SimulateSerial bool
 }
 
 func NewCore(params CoreParams) *Core {
+	if params.Addr == "" {
+		params.Addr = DefaultAddr
+	}
+
 	c := &Core{
 		debug:          params.Debug,
 		simulateSerial: params.SimulateSerial,
+		addr:           params.Addr,
 
 		clientReader:     make(chan []byte),
 		clientWriter:     make(chan []byte),
@@ -69,8 +80,8 @@ func (c *Core) Run() {
 	go c.hub.Run()
 	go c.serial.Run()
 
-	slog.Info("server started", "addr", "http://localhost:23193")
-	http.ListenAndServe("localhost:23193", nil)
+	slog.Info("server started", "addr", "http://"+c.addr)
+	http.ListenAndServe(c.addr, nil)
 }
 
 func (c *Core) run() {
