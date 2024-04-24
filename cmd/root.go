@@ -2,7 +2,6 @@ package main
 
 import (
 	"log/slog"
-	"os"
 
 	"github.com/spacefoot/wsproxy/internal/core"
 	"github.com/spf13/cobra"
@@ -23,10 +22,4 @@ var rootCmd = &cobra.Command{
 
 func init() {
 	rootCmd.PersistentFlags().Bool("verbose", false, "Verbose output")
-}
-
-func main() {
-	if err := rootCmd.Execute(); err != nil {
-		os.Exit(1)
-	}
 }
