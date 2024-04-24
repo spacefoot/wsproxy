@@ -15,7 +15,8 @@ var serviceCmd = &cobra.Command{
 }
 
 var serviceInstallCmd = &cobra.Command{
-	Use: "install",
+	Use:          "install",
+	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if err := windows.Install(); err != nil {
 			return err
@@ -33,7 +34,8 @@ var serviceInstallCmd = &cobra.Command{
 }
 
 var serviceRemoveCmd = &cobra.Command{
-	Use: "remove",
+	Use:          "remove",
+	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if err := windows.Remove(); err != nil {
 			return err
@@ -46,7 +48,8 @@ var serviceRemoveCmd = &cobra.Command{
 
 func generateControlCommand(name string, handler func() error) *cobra.Command {
 	return &cobra.Command{
-		Use: name,
+		Use:          name,
+		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return handler()
 		},
