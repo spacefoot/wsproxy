@@ -9,7 +9,7 @@ Supported devices:
 
 The serial device will be autodiscovered. If two devices is detected, an error will be reported. Device selection is currently not supported.
 
-The websocket endpoint is available at ws://localhost:23193/ws. A small debug page is available at http://localhost:23193
+The websocket endpoint is available at `ws://localhost:23193/ws`. A small debug page is available at http://localhost:23193
 
 ### Windows service
 
