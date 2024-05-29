@@ -26,7 +26,7 @@ func Prompt() error {
 			huh.NewSelect[int]().
 				Title("Action").
 				Options(
-					huh.NewOption("Démarer", START),
+					huh.NewOption("Démarrer", START),
 					huh.NewOption("Arrêter", STOP),
 					huh.NewOption("Installer", INSTALL),
 					huh.NewOption("Supprimer", REMOVE),
