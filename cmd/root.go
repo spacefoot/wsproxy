@@ -8,7 +8,7 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "wstty",
+	Use:   "wsproxy",
 	Short: "TTY WebSocket proxy",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if verbose, _ := cmd.Flags().GetBool("verbose"); verbose {
