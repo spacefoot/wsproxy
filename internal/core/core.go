@@ -57,7 +57,7 @@ func NewCore(params CoreParams) *Core {
 		scaleWriter:  make(chan []byte),
 		serialStatus: make(chan serial.Status),
 
-		serializer: serializer.Courier5000{},
+		serializer: &serializer.Courier5000{},
 	}
 
 	c.hub = websocket.NewHub(c.clientReader, c.clientWriter, c.clientRegistered)
