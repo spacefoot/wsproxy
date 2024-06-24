@@ -11,23 +11,27 @@ import (
 	"github.com/charmbracelet/huh"
 )
 
+type Action int
+
 const (
-	INSTALL int = iota
+	INSTALL Action = iota
 	REMOVE
 	START
 	STOP
+	RESTART
 	EXIT
 )
 
 func Prompt() error {
-	var input int
+	var input Action
 	form := huh.NewForm(
 		huh.NewGroup(
-			huh.NewSelect[int]().
+			huh.NewSelect[Action]().
 				Title("Action").
 				Options(
 					huh.NewOption("Démarrer", START),
 					huh.NewOption("Arrêter", STOP),
+					huh.NewOption("Redémarrer", RESTART),
 					huh.NewOption("Installer", INSTALL),
 					huh.NewOption("Supprimer", REMOVE),
 					huh.NewOption("Exit", EXIT),
@@ -66,7 +70,16 @@ func Prompt() error {
 		if err := Stop(); err != nil {
 			return err
 		}
-		fmt.Println("Service Arrêté")
+		fmt.Println("Service arrêté")
+	case RESTART:
+		if err := Stop(); err != nil {
+			return err
+		}
+		fmt.Println("Service arrêté")
+		if err := Start(); err != nil {
+			return err
+		}
+		fmt.Println("Service démarré")
 	case EXIT:
 		return nil
 	default:
