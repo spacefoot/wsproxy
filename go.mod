@@ -6,7 +6,7 @@ require (
 	github.com/charmbracelet/huh v0.3.0
 	github.com/gorilla/websocket v1.5.1
 	github.com/inconshreveable/mousetrap v1.1.0
-	github.com/spf13/cobra v1.8.0
+	github.com/spf13/cobra v1.8.1
 	go.bug.st/serial v1.6.2
 	golang.org/x/sys v0.20.0
 )
