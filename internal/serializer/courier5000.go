@@ -8,10 +8,10 @@ import (
 )
 
 type Courier5000 struct {
-	isContinous bool
+	isContinuous bool
 	// Lock last weight to avoid flooding
 	lastWeight float64
-	// Last read time. If 2 read <1s, continous mode is enabled
+	// Last read time. If 2 read <1s, continuous mode is enabled
 	lastRead time.Time
 }
 
@@ -22,9 +22,9 @@ func (c *Courier5000) Read(msg []byte) (any, error) {
 
 	lines := strings.Fields(string(msg))
 
-	// Continous mode
+	// Continuous mode
 	if len(lines) == 3 && lines[2] == "?" {
-		c.isContinous = true
+		c.isContinuous = true
 		c.lastWeight = 0 // Reset last weight if same stable weight
 		return nil, nil
 	}
@@ -33,11 +33,11 @@ func (c *Courier5000) Read(msg []byte) (any, error) {
 		return nil, nil
 	}
 
-	// Continous mode
-	if !c.isContinous {
+	// Continuous mode
+	if !c.isContinuous {
 		now := time.Now()
 		if now.Sub(c.lastRead) < time.Second {
-			c.isContinous = true
+			c.isContinuous = true
 		}
 		c.lastRead = now
 	}
@@ -47,8 +47,14 @@ func (c *Courier5000) Read(msg []byte) (any, error) {
 		return nil, err
 	}
 
-	// Continous mode, ignore invalid weight, ignore same weight
-	if weight <= 0 || c.isContinous && weight == c.lastWeight {
+	// Continuous mode, ignore invalid weight
+	if weight <= 0 {
+		c.lastWeight = 0
+		return nil, nil
+	}
+
+	// Continuous mode, ignore same weight
+	if c.isContinuous && weight == c.lastWeight {
 		return nil, nil
 	}
 
