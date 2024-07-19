@@ -7,10 +7,16 @@ import (
 	"time"
 )
 
+const STABLE_DELAY = 2 * time.Second
+
 type Courier5000 struct {
 	isContinuous bool
 	// Lock last weight to avoid flooding
 	lastWeight float64
+	// Last time weight changed
+	lastChange time.Time
+	// Lock to send weight only once
+	sendLock bool
 	// Last read time. If 2 read <1s, continuous mode is enabled
 	lastRead time.Time
 }
@@ -22,10 +28,10 @@ func (c *Courier5000) Read(msg []byte) (any, error) {
 
 	lines := strings.Fields(string(msg))
 
-	// Continuous mode
+	// Auto detect continuous mode
 	if len(lines) == 3 && lines[2] == "?" {
 		c.isContinuous = true
-		c.lastWeight = 0 // Reset last weight if same stable weight
+		c.reset()
 		return nil, nil
 	}
 
@@ -33,7 +39,7 @@ func (c *Courier5000) Read(msg []byte) (any, error) {
 		return nil, nil
 	}
 
-	// Continuous mode
+	// Auto detect continuous mode
 	if !c.isContinuous {
 		now := time.Now()
 		if now.Sub(c.lastRead) < time.Second {
@@ -49,16 +55,26 @@ func (c *Courier5000) Read(msg []byte) (any, error) {
 
 	// Continuous mode, ignore invalid weight
 	if weight <= 0 {
-		c.lastWeight = 0
+		c.reset()
 		return nil, nil
 	}
 
-	// Continuous mode, ignore same weight
-	if c.isContinuous && weight == c.lastWeight {
-		return nil, nil
+	if c.isContinuous {
+		if weight != c.lastWeight {
+			c.setLastWeight(weight)
+			return nil, nil
+		}
+
+		if c.sendLock {
+			return nil, nil
+		}
+
+		if time.Since(c.lastChange) < STABLE_DELAY {
+			return nil, nil
+		}
 	}
 
-	c.lastWeight = weight
+	c.sendLock = true
 	return &Weight{
 		Weight: weight,
 		Unit:   lines[1],
@@ -67,4 +83,14 @@ func (c *Courier5000) Read(msg []byte) (any, error) {
 
 func (*Courier5000) Write(data any) ([]byte, error) {
 	return nil, errors.New("not implemented")
+}
+
+func (c *Courier5000) setLastWeight(weight float64) {
+	c.lastWeight = weight
+	c.lastChange = time.Now()
+	c.sendLock = false
+}
+
+func (c *Courier5000) reset() {
+	c.setLastWeight(0)
 }
