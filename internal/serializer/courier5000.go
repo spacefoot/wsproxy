@@ -14,6 +14,8 @@ type Courier5000 struct {
 	isContinuous bool
 	// Lock last weight to avoid flooding
 	lastWeight float64
+	// Ensure scale is zeroed between measures
+	lastStableWeight float64
 	// Last time weight changed
 	lastChange time.Time
 	// Lock to send weight only once
@@ -55,7 +57,7 @@ func (c *Courier5000) Read(msg []byte) (any, error) {
 	}
 
 	// Continuous mode, ignore invalid weight
-	if weight <= 0 {
+	if weight < 0 {
 		c.reset()
 		return nil, nil
 	}
@@ -77,6 +79,20 @@ func (c *Courier5000) Read(msg []byte) (any, error) {
 
 	c.sendLock = true
 
+	if c.isContinuous {
+		// Ensure scale is zeroed between measures
+		if weight != 0 && c.lastStableWeight != 0 {
+			return nil, nil
+		}
+
+		c.lastStableWeight = weight
+
+		if weight == 0 {
+			return &Zeroed{}, nil
+		}
+	}
+
+	// skip below MIN_WEIGHT_TO_SEND threshold
 	if lines[1] == "g" && weight < MIN_WEIGHT_TO_SEND || lines[1] == "kg" && weight*1000 < MIN_WEIGHT_TO_SEND {
 		return nil, nil
 	}
