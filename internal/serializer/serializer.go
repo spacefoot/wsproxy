@@ -21,6 +21,8 @@ func MarshalJSON(v any) ([]byte, error) {
 		return marshalJSON("weight", v)
 	case *Status:
 		return marshalJSON("status", v)
+	case *Zeroed:
+		return marshalJSON("zeroed", v)
 	default:
 		return nil, errors.New("invalid message")
 	}
