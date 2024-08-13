@@ -8,7 +8,7 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0
 	github.com/spf13/cobra v1.8.1
 	go.bug.st/serial v1.6.2
-	golang.org/x/sys v0.23.0
+	golang.org/x/sys v0.24.0
 )
 
 require (
