@@ -8,7 +8,6 @@ import (
 )
 
 const STABLE_DELAY = 2 * time.Second
-const MIN_WEIGHT_TO_SEND = 50
 
 type Courier5000 struct {
 	isContinuous bool
@@ -32,7 +31,6 @@ func (c *Courier5000) Read(msg []byte) (any, error) {
 	// Auto detect continuous mode
 	if len(lines) == 3 && lines[2] == "?" {
 		c.isContinuous = true
-		c.reset()
 		return nil, nil
 	}
 
@@ -54,12 +52,6 @@ func (c *Courier5000) Read(msg []byte) (any, error) {
 		return nil, err
 	}
 
-	// Continuous mode, ignore invalid weight
-	if weight <= 0 {
-		c.reset()
-		return nil, nil
-	}
-
 	if c.isContinuous {
 		if weight != c.lastWeight {
 			c.setLastWeight(weight)
@@ -77,10 +69,6 @@ func (c *Courier5000) Read(msg []byte) (any, error) {
 
 	c.sendLock = true
 
-	if lines[1] == "g" && weight < MIN_WEIGHT_TO_SEND || lines[1] == "kg" && weight*1000 < MIN_WEIGHT_TO_SEND {
-		return nil, nil
-	}
-
 	return &Weight{
 		Weight: weight,
 		Unit:   lines[1],
@@ -95,8 +83,4 @@ func (c *Courier5000) setLastWeight(weight float64) {
 	c.lastWeight = weight
 	c.lastChange = time.Now()
 	c.sendLock = false
-}
-
-func (c *Courier5000) reset() {
-	c.setLastWeight(0)
 }
