@@ -41,6 +41,7 @@
         <div>
             <button @click="output = ''">Clear</button>
             <button @click="send({ type: 'status' })">Request Status</button>
+            <button @click="send({ type: 'zero' })">Zero</button>
         </div>
         <pre x-text="output"></pre>
 

@@ -120,13 +120,30 @@ func (s *Serial) reader() error {
 	return nil
 }
 
-func (s *Serial) Run() {
+func (s *Serial) readLoop() {
 	for {
 		s.OpenWithBackoff()
 
 		err := s.reader()
 		if err != nil {
 			slog.Error("serial reader error", "err", err)
+		}
+	}
+}
+
+func (s *Serial) Run() {
+	go s.readLoop()
+
+	for {
+		msg := <-s.write
+		if !s.opened {
+			slog.Warn("serial port not open")
+			continue
+		}
+
+		slog.Debug("write to serial", "data", string(msg))
+		if _, err := s.port.Write(msg); err != nil {
+			slog.Error("serial write error", "err", err)
 		}
 	}
 }
