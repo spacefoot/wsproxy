@@ -51,7 +51,7 @@ func (c *Courier5000) Read(msg []byte) (any, error) {
 
 	weight, err := strconv.ParseFloat(lines[0], 64)
 	if err != nil {
-		return nil, err
+		return nil, nil
 	}
 
 	// Continuous mode, ignore invalid weight
@@ -88,7 +88,12 @@ func (c *Courier5000) Read(msg []byte) (any, error) {
 }
 
 func (*Courier5000) Write(data any) ([]byte, error) {
-	return nil, errors.New("not implemented")
+	switch data.(type) {
+	case *Zero:
+		return []byte("Z\r\n"), nil
+	default:
+		return nil, errors.New("unsupported data type")
+	}
 }
 
 func (c *Courier5000) setLastWeight(weight float64) {

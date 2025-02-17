@@ -37,6 +37,8 @@ func UnmarshalJSON(data []byte) (any, error) {
 		return unmarshalJSON(t.Data, &Weight{})
 	case "status":
 		return &RequestStatus{}, nil
+	case "zero":
+		return &Zero{}, nil
 	default:
 		return nil, errors.New("invalid message")
 	}

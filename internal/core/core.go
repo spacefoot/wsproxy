@@ -129,7 +129,18 @@ func (c *Core) readClient(msg []byte) {
 			go c.writeClient(data)
 		}
 	default:
-		slog.Warn("unknown message", "data", string(msg))
+		data, err := c.serializer.Write(data)
+		if err != nil {
+			slog.Error("error while writing", "err", err)
+			return
+		}
+
+		if data == nil {
+			slog.Warn("unknown message", "data", string(msg))
+			return
+		}
+
+		c.scaleWriter <- data
 	}
 }
 

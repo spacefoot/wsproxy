@@ -10,3 +10,5 @@ type Status struct {
 }
 
 type RequestStatus struct{}
+
+type Zero struct{}
