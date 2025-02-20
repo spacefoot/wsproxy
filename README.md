@@ -11,6 +11,8 @@ The serial device will be autodiscovered. If two devices is detected, an error w
 
 The websocket endpoint is available at `ws://localhost:23193/ws`. A small debug page is available at http://localhost:23193
 
+[API Documentation](API.md)
+
 ### Windows service
 
 The proxy can be registered as a Windows service to run in background and be started automatically.
