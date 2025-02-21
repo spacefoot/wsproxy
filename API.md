@@ -43,10 +43,17 @@ Reset the scale value to 0
 }
 ```
 
+Request the last weight
+```json
+{
+  "type": "weight"
+}
+```
+
 Debug only, send a custom weight to be broadcasted
 ```json
 {
-  "type": "weight",
+  "type": "debug-weight",
   "data": {
     "weight": 0,
     "unit": "g"

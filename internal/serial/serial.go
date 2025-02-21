@@ -134,8 +134,7 @@ func (s *Serial) readLoop() {
 func (s *Serial) Run() {
 	go s.readLoop()
 
-	for {
-		msg := <-s.write
+	for msg := range s.write {
 		if !s.opened {
 			slog.Warn("serial port not open")
 			continue
