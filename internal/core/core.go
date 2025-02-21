@@ -27,6 +27,7 @@ type Core struct {
 	scaleReader  chan []byte
 	scaleWriter  chan []byte
 	serialStatus chan serial.Status
+	lastWeight   *serializer.Weight
 
 	serializer serializer.Serializer
 	hub        *websocket.Hub
@@ -64,7 +65,7 @@ func NewCore(params CoreParams) *Core {
 
 	if c.simulateSerial {
 		slog.Info("running serial in simulation mode")
-		c.serial = serial.NewMock(c.serialStatus)
+		c.serial = serial.NewMock(c.scaleReader, c.scaleWriter, c.serialStatus)
 	} else {
 		c.serial = serial.NewSerial(c.scaleReader, c.scaleWriter, c.serialStatus)
 	}
@@ -124,7 +125,11 @@ func (c *Core) readClient(msg []byte) {
 		// but the loop is already blocked in the clientReader path, causing a deadlock.
 		// Must start another goroutine to avoid this.
 		go c.serial.RequestStatus()
-	case *serializer.Weight:
+	case *serializer.RequestWeight:
+		if c.lastWeight != nil {
+			go c.writeClient(c.lastWeight)
+		}
+	case *serializer.DebugWeight:
 		if c.debug {
 			go c.writeClient(data)
 		}
@@ -145,6 +150,14 @@ func (c *Core) readClient(msg []byte) {
 }
 
 func (c *Core) writeClient(msg any) {
+	switch data := msg.(type) {
+	case *serializer.Weight:
+		c.lastWeight = data
+	case *serializer.DebugWeight:
+		weight := serializer.Weight(*data)
+		c.lastWeight = &weight
+	}
+
 	data, err := serializer.MarshalJSON(msg)
 	if err != nil {
 		slog.Error("error while marshalling", "err", err)

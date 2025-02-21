@@ -10,5 +10,7 @@ type Status struct {
 }
 
 type RequestStatus struct{}
-
+type RequestWeight struct{}
 type Zero struct{}
+
+type DebugWeight Weight
