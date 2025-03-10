@@ -1,6 +1,7 @@
 module github.com/spacefoot/wsproxy
 
 go 1.22
+toolchain go1.23.7
 
 require (
 	github.com/charmbracelet/huh v0.6.0
@@ -8,7 +9,7 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0
 	github.com/spf13/cobra v1.9.1
 	go.bug.st/serial v1.6.2
-	golang.org/x/sys v0.30.0
+	golang.org/x/sys v0.31.0
 )
 
 require (
