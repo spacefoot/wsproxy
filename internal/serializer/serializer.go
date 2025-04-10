@@ -21,6 +21,8 @@ func MarshalJSON(v any) ([]byte, error) {
 		return marshalJSON("weight", v)
 	case *Status:
 		return marshalJSON("status", v)
+	case *Unstable:
+		return marshalJSON("unstable", v)
 	case *DebugWeight:
 		return marshalJSON("weight", v)
 	default:
@@ -41,6 +43,8 @@ func UnmarshalJSON(data []byte) (any, error) {
 		return &RequestWeight{}, nil
 	case "zero":
 		return &Zero{}, nil
+	case "debug-unstable":
+		return &DebugUnstable{}, nil
 	case "debug-weight":
 		return unmarshalJSON(t.Data, &DebugWeight{})
 	default:
