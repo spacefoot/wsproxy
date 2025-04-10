@@ -9,8 +9,8 @@ require (
 	github.com/gorilla/websocket v1.5.3
 	github.com/inconshreveable/mousetrap v1.1.0
 	github.com/spf13/cobra v1.9.1
-	go.bug.st/serial v1.6.2
-	golang.org/x/sys v0.31.0
+	go.bug.st/serial v1.6.4
+	golang.org/x/sys v0.32.0
 )
 
 require (
