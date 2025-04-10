@@ -21,6 +21,8 @@ func MarshalJSON(v any) ([]byte, error) {
 		return marshalJSON("weight", v)
 	case *Status:
 		return marshalJSON("status", v)
+	case *DebugWeight:
+		return marshalJSON("weight", v)
 	default:
 		return nil, errors.New("invalid message")
 	}
@@ -33,12 +35,14 @@ func UnmarshalJSON(data []byte) (any, error) {
 	}
 
 	switch t.Type {
-	case "weight":
-		return unmarshalJSON(t.Data, &Weight{})
 	case "status":
 		return &RequestStatus{}, nil
+	case "weight":
+		return &RequestWeight{}, nil
 	case "zero":
 		return &Zero{}, nil
+	case "debug-weight":
+		return unmarshalJSON(t.Data, &DebugWeight{})
 	default:
 		return nil, errors.New("invalid message")
 	}

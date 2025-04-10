@@ -31,7 +31,7 @@
         </div>
 {{- if .Debug }}
         <div>
-            <form x-data="{weight: '0.5', unit: 'kg'}" @submit.prevent="send({ type: 'weight', data: { weight: Number(weight), unit } })">
+            <form x-data="{weight: '0.5', unit: 'kg'}" @submit.prevent="send({ type: 'debug-weight', data: { weight: Number(weight), unit } })">
                 <input type="number" step="0.01" x-model="weight">
                 <input type="text" x-model="unit">
                 <input type="submit" value="Send">
@@ -41,6 +41,7 @@
         <div>
             <button @click="output = ''">Clear</button>
             <button @click="send({ type: 'status' })">Request Status</button>
+            <button @click="send({ type: 'weight' })">Request Weight</button>
             <button @click="send({ type: 'zero' })">Zero</button>
         </div>
         <pre x-text="output"></pre>
