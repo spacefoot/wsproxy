@@ -31,12 +31,10 @@ func (c *Courier5000) Read(msg []byte) (any, error) {
 	// Auto detect continuous mode
 	if len(lines) == 3 && lines[2] == "?" {
 		c.isContinuous = true
+	} else if len(lines) != 2 {
 		return nil, nil
 	}
-
-	if len(lines) != 2 {
-		return nil, nil
-	}
+	unstable := len(lines) == 3
 
 	// Auto detect continuous mode
 	if !c.isContinuous {
@@ -62,7 +60,7 @@ func (c *Courier5000) Read(msg []byte) (any, error) {
 			return nil, nil
 		}
 
-		if time.Since(c.lastChange) < STABLE_DELAY {
+		if time.Since(c.lastChange) < STABLE_DELAY || unstable {
 			return nil, nil
 		}
 	}
