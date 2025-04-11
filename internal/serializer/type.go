@@ -11,6 +11,8 @@ type Status struct {
 
 type RequestStatus struct{}
 type RequestWeight struct{}
+type Unstable struct{}
 type Zero struct{}
 
 type DebugWeight Weight
+type DebugUnstable Unstable

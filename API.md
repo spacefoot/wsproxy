@@ -17,6 +17,14 @@ Report the stable weight on the scale
 }
 ```
 
+Report the weight to be unstable
+```json
+{
+  "type": "unstable",
+  "data": {}
+}
+```
+
 Report the status of the scale
 ```json
 {
@@ -58,5 +66,12 @@ Debug only, send a custom weight to be broadcasted
     "weight": 0,
     "unit": "g"
   }
+}
+```
+
+Debug only, send unstable to be broadcasted
+```json
+{
+  "type": "debug-unstable"
 }
 ```

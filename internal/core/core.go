@@ -27,7 +27,7 @@ type Core struct {
 	scaleReader  chan []byte
 	scaleWriter  chan []byte
 	serialStatus chan serial.Status
-	lastWeight   *serializer.Weight
+	lastWeight   any
 
 	serializer serializer.Serializer
 	hub        *websocket.Hub
@@ -57,6 +57,7 @@ func NewCore(params CoreParams) *Core {
 		scaleReader:  make(chan []byte),
 		scaleWriter:  make(chan []byte),
 		serialStatus: make(chan serial.Status),
+		lastWeight:   &serializer.Unstable{},
 
 		serializer: &serializer.Courier5000{},
 	}
@@ -119,19 +120,22 @@ func (c *Core) readClient(msg []byte) {
 		return
 	}
 
-	switch data.(type) {
+	switch d := data.(type) {
 	case *serializer.RequestStatus:
 		// RequestStatus will write to the serialStatus channel,
 		// but the loop is already blocked in the clientReader path, causing a deadlock.
 		// Must start another goroutine to avoid this.
 		go c.serial.RequestStatus()
 	case *serializer.RequestWeight:
-		if c.lastWeight != nil {
-			go c.writeClient(c.lastWeight)
+		go c.writeClient(c.lastWeight)
+	case *serializer.DebugUnstable:
+		if c.debug {
+			go c.writeClient(&serializer.Unstable{})
 		}
 	case *serializer.DebugWeight:
 		if c.debug {
-			go c.writeClient(data)
+			weight := serializer.Weight(*d)
+			go c.writeClient(&weight)
 		}
 	default:
 		data, err := c.serializer.Write(data)
@@ -151,11 +155,8 @@ func (c *Core) readClient(msg []byte) {
 
 func (c *Core) writeClient(msg any) {
 	switch data := msg.(type) {
-	case *serializer.Weight:
+	case *serializer.Weight, *serializer.Unstable:
 		c.lastWeight = data
-	case *serializer.DebugWeight:
-		weight := serializer.Weight(*data)
-		c.lastWeight = &weight
 	}
 
 	data, err := serializer.MarshalJSON(msg)

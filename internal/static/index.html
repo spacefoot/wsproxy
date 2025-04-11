@@ -31,11 +31,15 @@
         </div>
 {{- if .Debug }}
         <div>
-            <form x-data="{weight: '0.5', unit: 'kg'}" @submit.prevent="send({ type: 'debug-weight', data: { weight: Number(weight), unit } })">
+            <form style="display: inline-block" x-data="{weight: '500', unit: 'g'}" @submit.prevent="send({ type: 'debug-weight', data: { weight: Number(weight), unit } })">
                 <input type="number" step="0.01" x-model="weight">
-                <input type="text" x-model="unit">
+                <select x-model="unit">
+                    <option value="g">g</option>
+                    <option value="kg">kg</option>
+                </select>
                 <input type="submit" value="Send">
             </form>
+            <button @click="send({ type: 'debug-unstable' })">Send Unstable</button>
         </div>
 {{- end }}
         <div>
