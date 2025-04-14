@@ -125,6 +125,7 @@ func (c *Courier5000) Read(msg []byte) (any, error) {
 func (*Courier5000) Write(data any) ([]byte, error) {
 	switch data.(type) {
 	case *Zero:
+		log.Logger.Info("zero")
 		return []byte("Z\r\n"), nil
 	default:
 		return nil, errors.New("unsupported data type")
