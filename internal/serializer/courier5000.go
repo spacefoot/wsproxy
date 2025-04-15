@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/spacefoot/wsproxy/internal/log"
 )
 
 const STABLE_DELAY = 2 * time.Second
@@ -27,12 +29,20 @@ type Courier5000 struct {
 	lastWeight float64
 	// Lock to send weight only once
 	lock Lock
+
+	scaleUnstable bool
+	traceId       int64
 }
 
 func (c *Courier5000) readContinuous(lines []string) (any, error) {
 	if !(len(lines) == 2 || (len(lines) == 3 && lines[2] == "?")) {
 		return nil, nil
 	}
+
+	if len(lines) == 2 && c.scaleUnstable {
+		log.Logger.Info("scale stable", "weight", lines[0], "unit", lines[1], "trace", c.traceId)
+	}
+	c.scaleUnstable = len(lines) == 3
 
 	weight, err := strconv.ParseFloat(lines[0], 64)
 	if err != nil {
@@ -45,6 +55,8 @@ func (c *Courier5000) readContinuous(lines []string) (any, error) {
 
 		if c.lock != LOCK_UNSTABLE {
 			c.lock = LOCK_UNSTABLE
+			c.traceId = time.Now().UnixMilli()
+			log.Logger.Info("unstable weight", "weight", lines[0], "unit", lines[1], "trace", c.traceId)
 			return &Unstable{}, nil
 		}
 		return nil, nil
@@ -61,6 +73,7 @@ func (c *Courier5000) readContinuous(lines []string) (any, error) {
 	}
 
 	c.lock = LOCK_WEIGHT
+	log.Logger.Info("stable weight", "weight", lines[0], "unit", lines[1], "trace", c.traceId)
 	return &Weight{
 		Weight: weight,
 		Unit:   lines[1],
@@ -112,6 +125,7 @@ func (c *Courier5000) Read(msg []byte) (any, error) {
 func (*Courier5000) Write(data any) ([]byte, error) {
 	switch data.(type) {
 	case *Zero:
+		log.Logger.Info("zero")
 		return []byte("Z\r\n"), nil
 	default:
 		return nil, errors.New("unsupported data type")
