@@ -43,6 +43,10 @@
         </div>
 {{- end }}
         <div>
+            <button @click="send({ type: 'log', data: { enabled: true } })">Enable log</button>
+            <button @click="send({ type: 'log', data: { enabled: false } })">Disable log</button>
+        </div>
+        <div>
             <button @click="output = ''">Clear</button>
             <button @click="send({ type: 'status' })">Request Status</button>
             <button @click="send({ type: 'weight' })">Request Weight</button>

@@ -43,6 +43,8 @@ func UnmarshalJSON(data []byte) (any, error) {
 		return &RequestWeight{}, nil
 	case "zero":
 		return &Zero{}, nil
+	case "log":
+		return unmarshalJSON(t.Data, &Log{})
 	case "debug-unstable":
 		return &DebugUnstable{}, nil
 	case "debug-weight":

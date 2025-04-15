@@ -58,6 +58,16 @@ Request the last weight
 }
 ```
 
+Configure the logger
+```json
+{
+  "type": "log",
+  "data": {
+    "enabled": true
+  }
+}
+```
+
 Debug only, send a custom weight to be broadcasted
 ```json
 {

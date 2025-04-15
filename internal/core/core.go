@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/spacefoot/wsproxy/internal/log"
 	"github.com/spacefoot/wsproxy/internal/serial"
 	"github.com/spacefoot/wsproxy/internal/serializer"
 	"github.com/spacefoot/wsproxy/internal/static"
@@ -128,6 +129,14 @@ func (c *Core) readClient(msg []byte) {
 		go c.serial.RequestStatus()
 	case *serializer.RequestWeight:
 		go c.writeClient(c.lastWeight)
+	case *serializer.Log:
+		if d.Enabled {
+			slog.Debug("logging enabled")
+			log.Enable()
+		} else {
+			slog.Debug("logging disabled")
+			log.Disable()
+		}
 	case *serializer.DebugUnstable:
 		if c.debug {
 			go c.writeClient(&serializer.Unstable{})
